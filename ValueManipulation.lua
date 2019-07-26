@@ -1,11 +1,12 @@
--------------------
---SERIALIZES DATA--
-local function ConvertDataToTable(resultTable, parent)
+local ValueManipulation = {}
+
+--Converts Value objects into a table.
+function ValueManipulation.ValuesToTable(resultTable, parent)
     local items = parent:GetChildren()    
     for i = 1, #items do
 		resultTable[items[i].Name] = {}
         if (items[i]:IsA("Folder")) then
-			resultTable[items[i].Name] = ConvertDataToTable(resultTable[items[i].Name], items[i])
+			resultTable[items[i].Name] = ValueManipulation.ValuesToTable(resultTable[items[i].Name], items[i])
 		elseif (items[i]:IsA("Vector3Value")) then
 			resultTable[items[i].Name] = {["X"] = items[i].X, ["Y"] = items[i].Y, ["Z"] = items[i].Z}
 		else
@@ -16,17 +17,16 @@ local function ConvertDataToTable(resultTable, parent)
     return resultTable
 end
 
----------------------
---DESERIALIZES DATA--
-local function ConvertTableToData(parentTable, parentFolder)
+--Converts tables into value objects.
+function ValueManipulation.TableToValues(parentTable, parentFolder)
     for key, value in pairs(parentTable) do
         if(typeof(value) == 'table') then
             local folder = Instance.new('Folder')
             folder.Name = key
             folder.Parent = parentFolder
-            ConvertTableToData(value, folder)
+            ValueManipulation.TableToData(value, folder)
         else
-			local type = sm.FirstCharToUpper(typeof(value).."Value")
+			local type = (typeof(value):gsub("^%1", string.upper)).."Value"
 			if type == "BooleanValue" then type = "BoolValue" end
             local objectValue = Instance.new(type)
             objectValue.Name = key
@@ -35,3 +35,5 @@ local function ConvertTableToData(parentTable, parentFolder)
         end
     end
 end
+
+return ValueManipulation
